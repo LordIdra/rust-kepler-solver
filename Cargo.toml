@@ -1,0 +1,11 @@
+[package]
+name = "rust-kepler-solver"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+lazy_static = "1.4.0"
+
+[profile.dev]
+opt-level = 3
+debug = false
