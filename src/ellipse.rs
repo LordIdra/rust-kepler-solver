@@ -30,7 +30,6 @@ impl EllipseSolver {
 
         // Iteration using laguerre method
         // According to this 1985 paper laguerre should practially always converge (they tested it 500,000 times on different values)
-        // Also the number of iterations is fixed which is really nice because we can omit a branch every iteration :)
         // https://link.springer.com/content/pdf/10.1007/bf01230852.pdf
         loop {
             let sin_eccentric_anomaly = eccentric_anomaly.sin();

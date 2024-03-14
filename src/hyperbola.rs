@@ -131,13 +131,13 @@ impl HyperbolaSolver {
             fa + delta
         };
 
-        // 2nd order Newton-Raphson
+        // Halley method
         let f = ec * f0.sinh() - f0 - mh;
         let f_prime = ec * f0.cosh() - 1.0;
         let f_prime_prime = f_prime + 1.0;
         let f1 = f0 - (2.0 * f / f_prime) / (2.0 - f * f_prime_prime / f_prime.powi(2));
 
-        // Alternative: 1st order Newton-Raphson
+        // Alternative: Newton-Raphson
         //let f1 = f0 - f / f_prime;
 
         f1 * mean_anomaly.signum()
