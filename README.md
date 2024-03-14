@@ -13,5 +13,4 @@ The HKE is solved with a slightly more complicated method as per Baisheng Wu et 
 The crate includes tests for both the EKE and HKE solvers, which test ~ 6,000,000 and ~10,000,000 eccentricity and mean anomaly pairs. The values are linearly distributed for the EKE to cover the range of possible eccentricities and mean anomalies. For the HKE, both eccentricity and mean anomaly inputs up to infinity are technically valid, so we generate values using x^2/c to test a range of the smaller values (which is where the Pade approximation comes in) and larger values (where the analytical approximation comes in). Though it's not completely comprehensive, this should be enough to show that both solvers are very reliable.
 
 ### How to run
-Use `cargo run` in root to run benchmarks
-Use `cargo test` in root to run tests
+Use `cargo run` in root to run benchmarks and `cargo test` in root to run tests.
