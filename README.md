@@ -1,5 +1,5 @@
 ## Overview
-This repository contains Rust solvers for the Elliptic Kepler Equation (EKE) and Hyperbolic Kepler Equation (HKE). Use `cargo run` in root to run benchmarks and `cargo test` in root to run tests.
+This repository contains Rust solvers for the Elliptic Kepler Equation (EKE) and Hyperbolic Kepler Equation (HKE). Use `cargo run` in root to run benchmarks and `cargo test` in root to run tests. Note: This implementation uses f64's, greater performance can be achieved with f32's.
 
 ## Method
 ### EKE
