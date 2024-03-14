@@ -1,5 +1,3 @@
-use std::hint::black_box;
-
 use lazy_static::lazy_static;
 
 const CUBIC_DELTA_THRESHOLD: f64 = 1.0e-6;
@@ -113,7 +111,7 @@ impl HyperbolaSolver {
                 i += 1;
             }
             let a = PADE_ORDERS[i];
-            let coefficients = black_box(pade_approximation(ec, mh, a));
+            let coefficients = pade_approximation(ec, mh, a);
 
             solve_cubic(coefficients, mh, ec) + a
 
