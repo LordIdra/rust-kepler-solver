@@ -82,7 +82,7 @@ fn solve_cubic(coefficients: [f64; 4], mh: f64, ec: f64) -> f64 {
 
 /// ## Example
 /// ```rs
-/// use hyperbola::HyperbolaSolver;
+/// use rust_kepler_solver::hyperbola::HyperbolaSolver;
 ///
 /// fn example_hyperbola() {
 ///     let eccentricity = 1.0;

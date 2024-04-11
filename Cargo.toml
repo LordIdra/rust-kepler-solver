@@ -1,5 +1,5 @@
 [package]
-name = "rust_kepler_solver"
+name = "rust-kepler-solver"
 description = "Efficient solvers for the elliptical and hyperbolic Kepler equation"
 repository = "https://github.com/LordIdra/rust-kepler-solver"
 keywords = ["kepler", "orbits", "kepler equation"]

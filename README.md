@@ -4,7 +4,7 @@ This repository contains Rust solvers for the Elliptic Kepler Equation (EKE) and
 ## Example
 ```rs
 use std::f64::consts::PI;
-use ellipse::EllipseSolver;
+use rust_kepler_solver::ellipse::EllipseSolver;
 
 fn example_ellipse() {
     let eccentricity = 1.0;
@@ -15,7 +15,7 @@ fn example_ellipse() {
 ```
 
 ```rs
-use hyperbola::HyperbolaSolver;
+use rust_kepler_solver::hyperbola::HyperbolaSolver;
 
 fn example_hyperbola() {
     let eccentricity = 1.0;

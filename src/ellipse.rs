@@ -15,7 +15,7 @@ fn laguerre_delta(f: f64, f_prime: f64, f_prime_prime: f64) -> f64 {
 /// ## Example
 /// ```rs
 /// use std::f64::consts::PI;
-/// use ellipse::EllipseSolver;
+/// use rust_kepler_solver::ellipse::EllipseSolver;
 /// 
 /// fn example_ellipse() {
 ///     let eccentricity = 1.0;
