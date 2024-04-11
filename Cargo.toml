@@ -1,5 +1,8 @@
 [package]
 name = "rust_kepler_solver"
+description = "Efficient solvers for the elliptical and hyperbolic Kepler equation"
+repository = "https://github.com/LordIdra/rust-kepler-solver"
+license = "MIT"
 version = "0.1.0"
 edition = "2021"
 
