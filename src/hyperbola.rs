@@ -1,9 +1,10 @@
 use lazy_static::lazy_static;
+use serde::{Deserialize, Serialize};
 
 const CUBIC_DELTA_THRESHOLD: f64 = 1.0e-6;
 
 lazy_static! {
-    // From eq. 4 in the above paper
+    // From eq. 4 in the B. Wu et all paper
     // Max value in each interval
     static ref PADE_ECCENTRIC_ANOMALY_THRESHOLDS: [f64; 15] = [
         40.0 / 8.0,
@@ -79,13 +80,18 @@ fn solve_cubic(coefficients: [f64; 4], mh: f64, ec: f64) -> f64 {
     x
 }
 
-/// The method here comes from B. Wu et al, A new method for solving the hyperbolic Kepler equation
-/// Basically, we divide up the range of eccentric anomalies into 0-5 and 5+
-/// Then we compute what mean anomaly an eccentric anomaly of 5 comes out to, and cache that
-/// If our mean anomaly is larger than this, we substitute into a gigantic expression
-/// I don't really know how it works but it's VERY accurate for E > 5
-/// For mean anomalies smaller than our threshold, we use a Pade approximation
-#[derive(Debug)]
+/// ## Example
+/// ```rs
+/// use hyperbola::HyperbolaSolver;
+///
+/// fn example_hyperbola() {
+///     let eccentricity = 1.0;
+///     let solver = HyperbolaSolver::new(eccentricity);
+///     println!("{}", solver.solve(1.2));
+///     println!("{}", solver.solve(100.0));
+/// }
+/// ```
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HyperbolaSolver {
     eccentricity: f64,
     pade_mean_anomaly_thresholds: [f64; 15],
@@ -97,7 +103,7 @@ impl HyperbolaSolver {
         Self { eccentricity, pade_mean_anomaly_thresholds }
     }
 
-    /// Works with all values of mean anomaly
+    /// Works with all values of mean anomaly 0 to infinity
     pub fn solve(&self, mean_anomaly: f64) -> f64 {
         // Solver assumes mean anomaly > 0
         // The equation is symmetric, so for mean anomaly < 0, we just flip the sign o the output
@@ -134,9 +140,6 @@ impl HyperbolaSolver {
         let f_prime = ec * f0.cosh() - 1.0;
         let f_prime_prime = f_prime + 1.0;
         let f1 = f0 - (2.0 * f / f_prime) / (2.0 - f * f_prime_prime / f_prime.powi(2));
-
-        // Alternative: Newton-Raphson
-        //let f1 = f0 - f / f_prime;
 
         f1 * mean_anomaly.signum()
     }

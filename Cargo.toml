@@ -2,12 +2,15 @@
 name = "rust_kepler_solver"
 description = "Efficient solvers for the elliptical and hyperbolic Kepler equation"
 repository = "https://github.com/LordIdra/rust-kepler-solver"
+keywords = ["kepler", "orbits", "kepler equation"]
+categories = ["aerospace::simulation", "mathematics", "science"]
 license = "MIT"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
 lazy_static = "1.4.0"
+serde = { version = "1.0.195", features = ["derive"] }
 
 [dev-dependencies]
 criterion = { version = "0.5.1", features = ["html_reports"] }
