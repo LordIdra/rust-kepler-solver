@@ -1,11 +1,18 @@
 [package]
-name = "rust-kepler-solver"
+name = "rust_kepler_solver"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
 lazy_static = "1.4.0"
 
-[profile.dev]
-opt-level = 3
-debug = false
+[dev-dependencies]
+criterion = { version = "0.5.1", features = ["html_reports"] }
+
+[[bench]]
+name = "ellipse"
+harness = false
+
+[[bench]]
+name = "hyperbola"
+harness = false
