@@ -84,7 +84,7 @@ fn solve_cubic(coefficients: [f64; 4], mh: f64, ec: f64) -> f64 {
 /// Then we compute what mean anomaly an eccentric anomaly of 5 comes out to, and cache that
 /// If our mean anomaly is larger than this, we substitute into a gigantic expression
 /// I don't really know how it works but it's VERY accurate for E > 5
-/// For mean anomalies smaller than our threshold, we use a Pade approximation to
+/// For mean anomalies smaller than our threshold, we use a Pade approximation
 #[derive(Debug)]
 pub struct HyperbolaSolver {
     eccentricity: f64,

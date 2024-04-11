@@ -3,7 +3,6 @@ use std::time::Duration;
 use criterion::{criterion_group, criterion_main, Bencher, Criterion};
 use rust_kepler_solver::ellipse::EllipseSolver;
 
-// https://stackoverflow.com/questions/44338311/rust-benchmark-optimized-out for why we use black_box
 pub fn bench(c: &mut Criterion) {
     let eccentricities = [0.01, 0.1, 0.3, 0.5, 0.7, 0.9, 0.99];
     let mean_anomalies = [0.01, 0.5, 1.0, 2.0, 3.0, 4.0, 5.0, 5.5, 6.0, 6.283];

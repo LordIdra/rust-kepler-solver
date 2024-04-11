@@ -1,6 +1,30 @@
 ## Overview
 This repository contains Rust solvers for the Elliptic Kepler Equation (EKE) and Hyperbolic Kepler Equation (HKE). Use `cargo test` in root to run tests, and `cargo bench` in root to run benchmarks. Note: This implementation uses f64's, greater performance can be achieved with f32's.
 
+## Example
+```rs
+use std::f64::consts::PI;
+use ellipse::EllipseSolver;
+
+fn example_ellipse() {
+    let eccentricity = 1.0;
+    let solver = EllipseSolver::new(eccentricity);
+    println!("{}", solver.solve(1.2));
+    println!("{}", solver.solve(PI / 4.0));
+}
+```
+
+```rs
+use hyperbola::HyperbolaSolver;
+
+fn example_hyperbola() {
+    let eccentricity = 1.0;
+    let solver = HyperbolaSolver::new(eccentricity);
+    println!("{}", solver.solve(1.2));
+    println!("{}", solver.solve(100.0));
+}
+```
+
 ## Method
 ### EKE
 The EKE is solved by choosing an initial seed as described by Daniele Tommasini and David N. Olivieri (https://doi.org/10.1051/0004-6361/20214142), and then using Laguerre's method to iterate until the delta falls below a certain threshold. Laguerre's method is a reliable algorithm for solving the EKE according to Bruce A. Conway (https://doi.org/10.1007/BF01230852). There is almost certainly a more efficient method out there, but this implementation is still very fast.
