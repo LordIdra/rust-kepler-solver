@@ -27,7 +27,7 @@ fn example_hyperbola() {
 
 ## Method
 ### EKE
-The EKE is solved by choosing an initial seed as described by Daniele Tommasini and David N. Olivieri (https://doi.org/10.1051/0004-6361/20214142), and then using Laguerre's method to iterate until the delta falls below a certain threshold. Laguerre's method is a reliable algorithm for solving the EKE according to Bruce A. Conway (https://doi.org/10.1007/BF01230852). There is almost certainly a more efficient method out there, but this implementation is still very fast.
+The EKE is solved by choosing an initial seed as described by Daniele Tommasini and David N. Olivieri (https://doi.org/10.1051/0004-6361/202141423), and then using Laguerre's method to iterate until the delta falls below a certain threshold. Laguerre's method is a reliable algorithm for solving the EKE according to Bruce A. Conway (https://doi.org/10.1007/BF01230852). There is almost certainly a more efficient method out there, but this implementation is still very fast.
 
 ### HKE
 The HKE is solved with a slightly more complicated method as per Baisheng Wu et al (https://doi.org/10.1016/j.apm.2023.12.017). This method splits the interval of eccentric anomalies into two parts: one finite and one infinite part. An approximation is constructed for each region, the first using a piecewise Pade approximation, the second using 'an analytical initial approximate solution of the HKE.' We then compute thresholds for which interval a given mean anomaly should use, and get an initial approximation based off that. The approximations are so ridiculously accurate that only one step of Halley iteration is required to get a very precise result.
