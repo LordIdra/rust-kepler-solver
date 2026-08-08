@@ -1,20 +1,20 @@
-use std::f64::consts::PI;
+use std::f32::consts::PI;
 
 use serde::{Deserialize, Serialize};
 
-const DELTA_THRESHOLD: f64 = 1.0e-10;
+const DELTA_THRESHOLD: f32 = 1.0e-10;
 
-fn laguerre_delta(f: f64, f_prime: f64, f_prime_prime: f64) -> f64 {
-    let n: f64 = 2.0; // N=2, modified Newton-Raphson
+fn laguerre_delta(f: f32, f_prime: f32, f_prime_prime: f32) -> f32 {
+    let n: f32 = 2.0; // N=2, modified Newton-Raphson
     let a = (n-1.0).powi(2) * f_prime.powi(2) - n*(n-1.0)*f*f_prime_prime;
-    let mut b = f64::sqrt(a.abs());
+    let mut b = f32::sqrt(a.abs());
     b = b.abs() * f_prime.signum(); // prevent catastrophic cancellation
     - (n*f) / (f_prime + b)
 }
 
 /// ## Example
 /// ```rs
-/// use std::f64::consts::PI;
+/// use std::f32::consts::PI;
 /// use rust_kepler_solver::ellipse::EllipseSolver;
 /// 
 /// fn example_ellipse() {
@@ -26,17 +26,17 @@ fn laguerre_delta(f: f64, f_prime: f64, f_prime_prime: f64) -> f64 {
 /// ```
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EllipseSolver {
-    eccentricity: f64
+    eccentricity: f32
 }
 
 impl EllipseSolver {
-    pub fn new(eccentricity: f64) -> Self {
+    pub fn new(eccentricity: f32) -> Self {
         assert!(eccentricity <= 1.0);
         Self { eccentricity }
     }
 
     /// Works for 0 < `mean_anomaly` < 2pi
-    pub fn solve(&self, mean_anomaly: f64) -> f64 {
+    pub fn solve(&self, mean_anomaly: f32) -> f32 {
         // Choosing an initial seed: https://www.aanda.org/articles/aa/full_html/2022/02/aa41423-21/aa41423-21.html#S5
         // Yes, they're actually serious about that 0.999999 thing (lmao)
         let mut eccentric_anomaly = mean_anomaly
@@ -67,19 +67,19 @@ mod test {
 
     use super::EllipseSolver;
 
-    fn solve_with_bisection(e: f64, m: f64) -> f64 {
+    fn solve_with_bisection(e: f32, m: f32) -> f32 {
         // We don't care about speed here, so just use as wide a range as possible
-        let f = |eccentric_anomaly: f64| eccentric_anomaly - m - e*eccentric_anomaly.sin();
+        let f = |eccentric_anomaly: f32| eccentric_anomaly - m - e*eccentric_anomaly.sin();
         bisection(&f, -100000.0, 100000.0)
     }
 
     #[test] // 1079 81 991
     fn test_ellipse() {
-        let eccentricites: Vec<f64> = (1..999)
-            .map(|x| x as f64 / 1000.0)
+        let eccentricites: Vec<f32> = (1..999)
+            .map(|x| x as f32 / 1000.0)
             .collect();
-        let mean_anomalies: Vec<f64> = (0..6283) // about pi*2*100
-            .map(|x| x as f64 / 1000.0)
+        let mean_anomalies: Vec<f32> = (0..6283) // about pi*2*100
+            .map(|x| x as f32 / 1000.0)
             .collect();
             
         for e in &eccentricites {

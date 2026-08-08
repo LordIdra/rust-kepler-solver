@@ -11,6 +11,7 @@ edition = "2024"
 [dependencies]
 lazy_static = "1.4.0"
 serde = { version = "1.0.195", features = ["derive"] }
+fast-math = "0.1"
 
 [dev-dependencies]
 criterion = { version = "0.5.1", features = ["html_reports"] }
