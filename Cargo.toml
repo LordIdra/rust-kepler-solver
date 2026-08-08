@@ -5,8 +5,8 @@ repository = "https://github.com/LordIdra/rust-kepler-solver"
 keywords = ["kepler", "orbits", "kepler-equation"]
 categories = ["aerospace::simulation", "mathematics", "science"]
 license = "MIT"
-version = "0.1.0"
-edition = "2021"
+version = "0.1.1"
+edition = "2024"
 
 [dependencies]
 lazy_static = "1.4.0"
@@ -22,3 +22,10 @@ harness = false
 [[bench]]
 name = "hyperbola"
 harness = false
+
+[profile.bench]
+debug = true
+
+[profile.samply]
+inherits = "release"
+debug = true

@@ -21,7 +21,8 @@ lazy_static! {
         7.0  / 8.0,
         5.0  / 8.0,
         3.0  / 8.0,
-        29.0 / 200.0];
+        29.0 / 200.0
+    ];
 
     static ref PADE_ORDERS: [f64; 15] = [
         10.0 / 2.0,
@@ -38,7 +39,16 @@ lazy_static! {
         3.0 / 4.0,
         2.0 / 4.0,
         1.0 / 4.0,
-        0.0 / 4.0];
+        0.0 / 4.0
+    ];
+}
+
+fn sinh_cosh(a: f64) -> (f64, f64) {
+    let ex = f64::exp(a);
+    let enx = f64::exp(-a);
+    let sinh = (ex-enx) / 2.0;
+    let cosh = (ex+enx) / 2.0;
+    (sinh, cosh)
 }
 
 fn hyperbolic_kepler_equation(eccentricity: f64, eccentric_anomaly: f64) -> f64 {
@@ -46,10 +56,7 @@ fn hyperbolic_kepler_equation(eccentricity: f64, eccentric_anomaly: f64) -> f64 
 }
 
 fn pade_approximation(ec: f64, mh: f64, a: f64) -> [f64; 4] {
-    let ex = f64::exp(a);
-    let enx = f64::exp(-a);
-    let sa = (ex-enx) / 2.0; // sinh(a)
-    let ca = (ex+enx) / 2.0; // cosh(a)
+    let (sa, ca) = sinh_cosh(a);
     let d1 = ca.powi(2) + 3.0;
     let d2 = sa.powi(2) + 4.0;
     let p1 = ca * (3.0 * ca.powi(2) + 17.0) / (5.0 * d1);
@@ -61,11 +68,12 @@ fn pade_approximation(ec: f64, mh: f64, a: f64) -> [f64; 4] {
     let coefficient_f2 = ec * p2 - (mh + a) * q2 - q1;
     let coefficient_f1 = ec * p1 - (mh + a) * q1 - 1.0;
     let coefficient_f0 = ec * sa - mh - a;
-    [coefficient_f3,coefficient_f2, coefficient_f1, coefficient_f0]
+    [coefficient_f3, coefficient_f2, coefficient_f1, coefficient_f0]
 }
 
+/// f(x) = cf[0]*x^3 + cf[1]*x^2 + cf[2]*x + cf[3]
 fn solve_cubic(coefficients: [f64; 4], mh: f64, ec: f64) -> f64 {
-    let mut x = mh / (ec - 1.0); // starting value from series expansion of HKE
+    let mut x = f64::min(mh, ec) / (ec - 0.538);
     loop {
         // halley's method
         let f = ((coefficients[0]*x + coefficients[1])*x + coefficients[2])*x + coefficients[3];
@@ -94,13 +102,60 @@ fn solve_cubic(coefficients: [f64; 4], mh: f64, ec: f64) -> f64 {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HyperbolaSolver {
     eccentricity: f64,
-    pade_mean_anomaly_thresholds: [f64; 15],
+    pade_mean_anomaly_thresholds: Vec<f64>,
 }
 
 impl HyperbolaSolver {
     pub fn new(eccentricity: f64) -> Self {
-        let pade_mean_anomaly_thresholds = PADE_ECCENTRIC_ANOMALY_THRESHOLDS.map(|eccentric_anomaly| hyperbolic_kepler_equation(eccentricity, eccentric_anomaly));
-        Self { eccentricity, pade_mean_anomaly_thresholds }
+        assert!(eccentricity >= 1.0);
+        // Note: the mean anomaly thresholds are not actually monotonically increasing and for
+        // lower values of e seem to curve back upwards towards the end. I am not sure why this is
+        // and it does not seem to be addressed in the paper, but regardless the approximation
+        // seems to be very good so we deal with this by just terminating if the values start to
+        // curve back up.
+        let mut pade_mean_anomaly_thresholds = vec![];
+        for eccentric_anomaly in PADE_ECCENTRIC_ANOMALY_THRESHOLDS.iter() {
+            let mean_anomaly = hyperbolic_kepler_equation(eccentricity, *eccentric_anomaly);
+            if let Some(previous_mean_anomaly) = pade_mean_anomaly_thresholds.last() && mean_anomaly > *previous_mean_anomaly {
+                break;
+            }
+            pade_mean_anomaly_thresholds.push(mean_anomaly);
+        }
+
+        Self { eccentricity, pade_mean_anomaly_thresholds: pade_mean_anomaly_thresholds.into() }
+    }
+
+    fn get_initial_approximation_for_small_mh(&self, ec: f64, mh: f64) -> f64 {
+        // For mh < hke(5) we use a 'piecewise pade approximation' to get the starting estimate
+        let i = self.pade_mean_anomaly_thresholds.partition_point(|&x| x >= mh)-1;
+        let a = PADE_ORDERS[i];
+        let coefficients = pade_approximation(ec, mh, a);
+
+        solve_cubic(coefficients, mh, ec) + a
+    }
+
+    fn get_initial_approximation_for_large_mh(&self, ec: f64, mh: f64) -> f64 {
+        // For mh >= hke(5), we can use this... thing that I copied from the above paper
+        // I have no idea how it works, but it works very very very well
+        let fa = f64::ln(2.0 * mh / ec);
+        let ca = 0.5 * (2.0 * mh / ec + ec / (2.0 * mh));
+        let sa = 0.5 * (2.0 * mh / ec - ec / (2.0 * mh));
+        let top = 6.0 * (ec.powi(2) / (4.0 * mh) + fa) / (ec * ca - 1.0) 
+        + 3.0 * (ec * sa / (ec * ca - 1.0)) * ((ec.powi(2) / (4.0 * mh) + fa) / (ec * ca - 1.0)).powi(2);
+        let bottom = 6.0 + 6.0 * (ec * sa / (ec * ca - 1.0)) * ((ec.powi(2) / (4.0 * mh) + fa) / (ec * ca - 1.0))
+        + (ec * ca / (ec * ca - 1.0)) * ((ec.powi(2) / (4.0 * mh) + fa) / (ec * ca - 1.0)).powi(2);
+        let delta = top / bottom;
+        fa + delta
+    }
+
+    fn improve_initial_approximation(&self, f0: f64, mh: f64, ec: f64, mean_anomaly: f64) -> f64 {
+        // Halley method
+        let (sf0, cf0) = sinh_cosh(f0);
+        let f = ec * sf0 - f0 - mh;
+        let f_prime = ec * cf0 - 1.0;
+        let f_prime_prime = f_prime + 1.0;
+        let f1 = f0 - (2.0 * f / f_prime) / (2.0 - f * f_prime_prime / f_prime.powi(2));
+        f1 * mean_anomaly.signum()
     }
 
     /// Works with all values of mean anomaly 0 to infinity
@@ -111,37 +166,11 @@ impl HyperbolaSolver {
         let mh = mean_anomaly.abs();
 
         let f0 = if mh <= self.pade_mean_anomaly_thresholds[0] {
-            // For mh < 5 we use a 'piecewise pade approximation' to get the starting estimate
-            let mut i = 0;
-            while i < self.pade_mean_anomaly_thresholds.len()-1 && mh < self.pade_mean_anomaly_thresholds[i+1] {
-                i += 1;
-            }
-            let a = PADE_ORDERS[i];
-            let coefficients = pade_approximation(ec, mh, a);
-
-            solve_cubic(coefficients, mh, ec) + a
-
+            self.get_initial_approximation_for_small_mh(ec, mh)
         } else {
-            // For mh >= 5, we can use this... thing that I copied from the above paper
-            // I have no idea how it works, but it works very very very well
-            let fa = f64::ln(2.0 * mh / ec);
-            let ca = 0.5 * (2.0 * mh / ec + ec / (2.0 * mh));
-            let sa = 0.5 * (2.0 * mh / ec - ec / (2.0 * mh));
-            let top = 6.0 * (ec.powi(2) / (4.0 * mh) + fa) / (ec * ca - 1.0) 
-                + 3.0 * (ec * sa / (ec * ca - 1.0)) * ((ec.powi(2) / (4.0 * mh) + fa) / (ec * ca - 1.0)).powi(2);
-            let bottom = 6.0 + 6.0 * (ec * sa / (ec * ca - 1.0)) * ((ec.powi(2) / (4.0 * mh) + fa) / (ec * ca - 1.0))
-                + (ec * ca / (ec * ca - 1.0)) * ((ec.powi(2) / (4.0 * mh) + fa) / (ec * ca - 1.0)).powi(2);
-            let delta = top / bottom;
-            fa + delta
+            self.get_initial_approximation_for_large_mh(ec, mh)
         };
-
-        // Halley method
-        let f = ec * f0.sinh() - f0 - mh;
-        let f_prime = ec * f0.cosh() - 1.0;
-        let f_prime_prime = f_prime + 1.0;
-        let f1 = f0 - (2.0 * f / f_prime) / (2.0 - f * f_prime_prime / f_prime.powi(2));
-
-        f1 * mean_anomaly.signum()
+        self.improve_initial_approximation(f0, mh, ec, mean_anomaly)
     }
 }
 
@@ -159,20 +188,20 @@ mod test {
 
     #[test]
     fn test_hyperbola() {
-        let eccentricites: Vec<f64> = (1..999)
+        let eccentricities: Vec<f64> = (1..999)
             .map(|x| 1.0 + f64::powi(x as f64, 2) / 1000.0)
             .collect();
         let mean_anomalies: Vec<f64> = (0..10000)
             .map(|x| f64::powi(x as f64, 2) / 10000.0)
             .collect();
             
-        for e in &eccentricites {
+        for e in &eccentricities {
             let solver = HyperbolaSolver::new(*e);
             for m in &mean_anomalies {
                 let expected = solve_with_bisection(*e, *m);
                 let actual = solver.solve(*m);
-                let difference = if actual.abs() < 1.0e-5 { expected - actual } else { (expected - actual) / actual }.abs();
-                if difference > 1.0e-4 {
+                let difference = if actual.abs() == 0.0 { expected - actual } else { (expected - actual) / actual }.abs();
+                if difference > 1.0e-5 {
                     dbg!(expected, actual, difference, e, m);
                     panic!()
                 }

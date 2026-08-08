@@ -31,6 +31,7 @@ pub struct EllipseSolver {
 
 impl EllipseSolver {
     pub fn new(eccentricity: f64) -> Self {
+        assert!(eccentricity <= 1.0);
         Self { eccentricity }
     }
 
@@ -46,8 +47,7 @@ impl EllipseSolver {
         // According to this 1985 paper laguerre should practially always converge (they tested it 500,000 times on different values)
         // https://link.springer.com/content/pdf/10.1007/bf01230852.pdf
         loop {
-            let sin_eccentric_anomaly = eccentric_anomaly.sin();
-            let cos_eccentric_anomaly = eccentric_anomaly.cos();
+            let (sin_eccentric_anomaly, cos_eccentric_anomaly) = eccentric_anomaly.sin_cos();
             let f = mean_anomaly - eccentric_anomaly + self.eccentricity*sin_eccentric_anomaly;
             let f_prime = -1.0 + self.eccentricity*cos_eccentric_anomaly;
             let f_prime_prime = -self.eccentricity*sin_eccentric_anomaly;
@@ -73,7 +73,7 @@ mod test {
         bisection(&f, -100000.0, 100000.0)
     }
 
-    #[test]
+    #[test] // 1079 81 991
     fn test_ellipse() {
         let eccentricites: Vec<f64> = (1..999)
             .map(|x| x as f64 / 1000.0)
